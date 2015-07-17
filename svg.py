@@ -1,36 +1,63 @@
-#python2.7
+#coding=utf-8
+
 import subprocess
 import os
 import cairosvg
+import config
+import time
 
 
 # for test
-# subprocess.Popen('./svg-sprite/bin/svg-sprite.js -cD out --ccss --cx assets/*.svg',shell=True)
-# subprocess.Popen('./svg-sprite/bin/svg-sprite.js -cD out1 --ccss --cx assets/example-1.svg',shell=True)
-# subprocess.Popen('./svg-sprite/bin/svg-sprite.js -cD out1 --ccss --cx assets/example-2.svg assets/example-1.svg',shell=True)
+# subprocess.Popen('./svg-sprite/bin/svg-sprite.js -cD output --ccss --cx assets/*.svg',shell=True)
+# subprocess.Popen('./svg-sprite/bin/svg-sprite.js -cD output1 --ccss --cx assets/example-1.svg',shell=True)
+# subprocess.Popen('./svg-sprite/bin/svg-sprite.js -cD output1 --ccss --cx assets/example-2.svg assets/example-1.svg',shell=True)
 
 
-def svg(arg, out, mode):
 
-	cli = './svg-sprite/bin/svg-sprite.js'
-	out = '--dest=' + out
-	mode = mode.split(' ')
+def svg(input):
+    outputDir = os.path.join('.','output',time.ctime())
+    mode = getMode(config.mode)
+    svgOutputDir = os.path.join(outputDir, 'svg')
+    packsvg(input, mode,output=svgOutputDir)
+    exportsvg(svgOutputDir, 'png', outputDir=os.path.join(outputDir, 'png'))
+
+	
+	
+def getMode(mode):
+	modelist = []
+	for (id,value) in mode.items():
+		if value != '' and value != 'false':
+			if value == 'true':
+				modelist.append(id)
+			else:
+				str = id + '=' +value
+				modelist.append(str)
+	return modelist
+
+
+
+def packsvg(input, mode, output):
+
+	cli = os.path.join('.', 'svg-sprite', 'bin', 'svg-sprite.js')
+	output = '--dest=' + output
+	if type(mode) != list:
+		mode = mode.split(' ')
 	files = []
 
-	if type(arg) == list:
-		for svgfile in arg:
+	if type(input) == list:
+		for svgfile in input:
 			if svgfile.endswith('.svg'):
 				if os.path.exists(svgfile):
 					files.append(svgfile)
 		print 'list'
 
-	elif os.path.isfile(arg):
-		if arg.endswith('.svg'):
-			files.append(arg)
+	elif os.path.isfile(input):
+		if input.endswith('.svg'):
+			files.append(input)
 			print 'svgfile'
 
-	elif os.path.isdir(arg):
-		files.append(os.path.join(arg, r'*.svg'))
+	elif os.path.isdir(input):
+		files.append(os.path.join(input, r'*.svg'))
 		print 'dir'
 	
 	else:
@@ -39,7 +66,7 @@ def svg(arg, out, mode):
 	cmd = []
 	cmd.append(cli)
 	cmd.extend(mode)
-	cmd.append(out)
+	cmd.append(output)
 	cmd.extend(files)
 	print cmd
 	subprocess.call(cmd)
@@ -51,9 +78,11 @@ class SvgException(Exception):
 
 
 
-def exportsvg(fromDir, targetDir, exportType):
+def exportsvg(inputDir, exportType, outputDir):
+    if not os.path.exists(outputDir):
+        os.mkdir(outputDir)
     num = 0
-    for a,f,c in os.walk(fromDir):
+    for a,f,c in os.walk(inputDir):
         for fileName in c:
             path = os.path.join(a, fileName)
             if os.path.isfile(path) and fileName.endswith('.svg'):
@@ -61,7 +90,7 @@ def exportsvg(fromDir, targetDir, exportType):
                 fileHandle = open(path)
                 svg = fileHandle.read()
                 fileHandle.close()
-                exportPath = os.path.join(targetDir, fileName[:-3] + exportType)
+                exportPath = os.path.join(outputDir, fileName[:-3] + exportType)
                 exportFileHandle = open(exportPath, 'w')
 
                 if exportType == "png":

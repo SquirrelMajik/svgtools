@@ -1,7 +1,6 @@
 __author__ = 'majik'
 
 import svg
-import svgtransformer
 
 
 if __name__ == "__main__":
@@ -12,4 +11,11 @@ if __name__ == "__main__":
 	# 	svg.svg('123', 'out4', '-c --ccss --cs')
 	# except svg.SvgException as svgexception:
 	# 	print svgexception.details
-    svgtransformer.svgform('1.svg')
+
+
+
+    # svgtransformer.svgform('1.svg')
+
+
+    svg.svg('assets')
+    svg.svg('assets/example-1.svg')
